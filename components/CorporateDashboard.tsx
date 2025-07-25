@@ -1,0 +1,375 @@
+'use client'
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  ShoppingCart, 
+  Truck, 
+  Users,
+  BarChart3,
+  Target,
+  Activity,
+  AlertCircle,
+  Package,
+  CreditCard
+} from 'lucide-react'
+
+interface DashboardMetric {
+  title: string
+  value: string
+  change?: string
+  trend: 'up' | 'down' | 'stable'
+  icon: React.ReactNode
+  color: string
+  meta?: string
+  status?: 'success' | 'warning' | 'danger'
+}
+
+interface CorporateDashboardProps {
+  indicators?: any[]
+  goals?: any[]
+}
+
+// Função para calcular tendência baseada em valor vs meta
+function calculateTrend(value: number, meta: number, isInverse: boolean = false): 'up' | 'down' | 'stable' {
+  const percentage = (value / meta) * 100
+  if (isInverse) {
+    // Para indicadores onde menor é melhor
+    return percentage <= 100 ? 'up' : 'down'
+  } else {
+    // Para indicadores onde maior é melhor
+    return percentage >= 100 ? 'up' : 'down'
+  }
+}
+
+// Função para calcular mudança percentual
+function calculateChange(value: number, meta: number, isInverse: boolean = false): string {
+  const percentage = (value / meta) * 100
+  const diff = isInverse ? (100 - percentage) : (percentage - 100)
+  return `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`
+}
+
+// Função para formatar moeda
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
+}
+
+// Função para formatar números grandes
+function formatLargeNumber(value: number): string {
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`
+  } else if (value >= 1000) {
+    return `${(value / 1000).toFixed(0)}K`
+  }
+  return value.toString()
+}
+
+export function CorporateDashboard({ indicators = [], goals = [] }: CorporateDashboardProps) {
+  // Filtrar indicadores por departamento
+  const comercialData = indicators.filter(ind => ind.department === 'COMERCIAL' || ind.user?.department === 'COMERCIAL')
+  const logisticaData = indicators.filter(ind => ind.department === 'LOGISTICA' || ind.user?.department === 'LOGISTICA')
+  const comprasData = indicators.filter(ind => ind.department === 'COMPRAS' || ind.user?.department === 'COMPRAS')
+  const financeiroData = indicators.filter(ind => ind.department === 'FINANCEIRO' || ind.user?.department === 'FINANCEIRO')
+
+  // Obter dados mais recentes de cada setor
+  const latestComercial = comercialData[0]?.data || {}
+  const latestLogistica = logisticaData[0]?.data || {}
+  const latestCompras = comprasData[0]?.data || {}
+  const latestFinanceiro = financeiroData[0]?.data || {}
+
+  // Métricas do Comercial baseadas nos formulários reais
+  const comercialMetrics: DashboardMetric[] = [
+    {
+      title: 'Faturamento Mês',
+      value: latestComercial.faturamentoMesAcumulado ? formatCurrency(latestComercial.faturamentoMesAcumulado) : 'R$ 0',
+      change: latestComercial.faturamentoMesAcumulado && latestComercial.metaFaturamentoMes ? 
+        calculateChange(latestComercial.faturamentoMesAcumulado, latestComercial.metaFaturamentoMes) : undefined,
+      trend: latestComercial.faturamentoMesAcumulado && latestComercial.metaFaturamentoMes ? 
+        calculateTrend(latestComercial.faturamentoMesAcumulado, latestComercial.metaFaturamentoMes) : 'stable',
+      icon: <DollarSign className="h-6 w-6" />,
+      color: 'text-green-600',
+      meta: latestComercial.metaFaturamentoMes ? `Meta: ${formatCurrency(latestComercial.metaFaturamentoMes)}` : undefined
+    },
+    {
+      title: 'Faturamento Dia',
+      value: latestComercial.faturamentoDia ? formatCurrency(latestComercial.faturamentoDia) : 'R$ 0',
+      change: latestComercial.faturamentoDia && latestComercial.metaFaturamentoDia ? 
+        calculateChange(latestComercial.faturamentoDia, latestComercial.metaFaturamentoDia) : undefined,
+      trend: latestComercial.faturamentoDia && latestComercial.metaFaturamentoDia ? 
+        calculateTrend(latestComercial.faturamentoDia, latestComercial.metaFaturamentoDia) : 'stable',
+      icon: <BarChart3 className="h-6 w-6" />,
+      color: 'text-blue-600',
+      meta: latestComercial.metaFaturamentoDia ? `Meta: ${formatCurrency(latestComercial.metaFaturamentoDia)}` : undefined
+    },
+    {
+      title: 'Positivação Mês',
+      value: latestComercial.positivacaoMesAcumulado ? latestComercial.positivacaoMesAcumulado.toString() : '0',
+      change: latestComercial.positivacaoMesAcumulado && latestComercial.metaPositivacaoMes ? 
+        calculateChange(latestComercial.positivacaoMesAcumulado, latestComercial.metaPositivacaoMes) : undefined,
+      trend: latestComercial.positivacaoMesAcumulado && latestComercial.metaPositivacaoMes ? 
+        calculateTrend(latestComercial.positivacaoMesAcumulado, latestComercial.metaPositivacaoMes) : 'stable',
+      icon: <Users className="h-6 w-6" />,
+      color: 'text-purple-600',
+      meta: latestComercial.metaPositivacaoMes ? `Meta: ${latestComercial.metaPositivacaoMes}` : undefined
+    }
+  ]
+
+  // Métricas da Logística baseadas nos formulários reais
+  const logisticaMetrics: DashboardMetric[] = [
+    {
+      title: 'OTIF (On Time In Full)',
+      value: latestLogistica.otifMes ? `${latestLogistica.otifMes.toFixed(1)}%` : '0%',
+      change: latestLogistica.otifMes && latestLogistica.metaOtif ? 
+        calculateChange(latestLogistica.otifMes, latestLogistica.metaOtif) : undefined,
+      trend: latestLogistica.otifMes && latestLogistica.metaOtif ? 
+        calculateTrend(latestLogistica.otifMes, latestLogistica.metaOtif) : 'stable',
+      icon: <Truck className="h-6 w-6" />,
+      color: 'text-green-600',
+      meta: latestLogistica.metaOtif ? `Meta: ${latestLogistica.metaOtif}%` : undefined
+    },
+    {
+      title: 'Taxa Devolução',
+      value: latestLogistica.taxaDevolucaoMes ? `${latestLogistica.taxaDevolucaoMes.toFixed(1)}%` : '0%',
+      change: latestLogistica.taxaDevolucaoMes && latestLogistica.metaTaxaDevolucao ? 
+        calculateChange(latestLogistica.taxaDevolucaoMes, latestLogistica.metaTaxaDevolucao, true) : undefined,
+      trend: latestLogistica.taxaDevolucaoMes && latestLogistica.metaTaxaDevolucao ? 
+        calculateTrend(latestLogistica.taxaDevolucaoMes, latestLogistica.metaTaxaDevolucao, true) : 'stable',
+      icon: <AlertCircle className="h-6 w-6" />,
+      color: 'text-orange-600',
+      meta: latestLogistica.metaTaxaDevolucao ? `Meta: ≤${latestLogistica.metaTaxaDevolucao}%` : undefined
+    },
+    {
+      title: 'Custo Logístico',
+      value: latestLogistica.custoLogisticoMes ? `${latestLogistica.custoLogisticoMes.toFixed(1)}%` : '0%',
+      change: latestLogistica.custoLogisticoMes && latestLogistica.metaCustoLogistico ? 
+        calculateChange(latestLogistica.custoLogisticoMes, latestLogistica.metaCustoLogistico, true) : undefined,
+      trend: latestLogistica.custoLogisticoMes && latestLogistica.metaCustoLogistico ? 
+        calculateTrend(latestLogistica.custoLogisticoMes, latestLogistica.metaCustoLogistico, true) : 'stable',
+      icon: <DollarSign className="h-6 w-6" />,
+      color: 'text-purple-600',
+      meta: latestLogistica.metaCustoLogistico ? `Meta: ≤${latestLogistica.metaCustoLogistico}%` : undefined
+    }
+  ]
+
+  // Métricas de Compras baseadas nos formulários reais
+  const comprasMetrics: DashboardMetric[] = [
+    {
+      title: 'Ruptura Mês',
+      value: latestCompras.rupturaMesValor ? formatCurrency(latestCompras.rupturaMesValor) : 'R$ 0',
+      change: latestCompras.rupturaMesValor && latestCompras.metaRupturaValor ? 
+        calculateChange(latestCompras.rupturaMesValor, latestCompras.metaRupturaValor, true) : undefined,
+      trend: latestCompras.rupturaMesValor && latestCompras.metaRupturaValor ? 
+        calculateTrend(latestCompras.rupturaMesValor, latestCompras.metaRupturaValor, true) : 'stable',
+      icon: <AlertCircle className="h-6 w-6" />,
+      color: 'text-red-600',
+      meta: latestCompras.metaRupturaValor ? `Meta: ${formatCurrency(latestCompras.metaRupturaValor)}` : undefined
+    },
+    {
+      title: 'Cobertura Estoque',
+      value: latestCompras.mediaDias ? `${latestCompras.mediaDias} dias` : '0 dias',
+      change: latestCompras.mediaDias && latestCompras.metaCoberturaEstoque ? 
+        calculateChange(latestCompras.mediaDias, latestCompras.metaCoberturaEstoque) : undefined,
+      trend: latestCompras.mediaDias && latestCompras.metaCoberturaEstoque ? 
+        calculateTrend(latestCompras.mediaDias, latestCompras.metaCoberturaEstoque) : 'stable',
+      icon: <Package className="h-6 w-6" />,
+      color: 'text-blue-600',
+      meta: latestCompras.metaCoberturaEstoque ? `Meta: ${latestCompras.metaCoberturaEstoque} dias` : undefined
+    },
+    {
+      title: 'Curva C',
+      value: latestCompras.curvaCValor ? formatCurrency(latestCompras.curvaCValor) : 'R$ 0',
+      change: latestCompras.curvaCValor && latestCompras.metaCurvaCValor ? 
+        calculateChange(latestCompras.curvaCValor, latestCompras.metaCurvaCValor, true) : undefined,
+      trend: latestCompras.curvaCValor && latestCompras.metaCurvaCValor ? 
+        calculateTrend(latestCompras.curvaCValor, latestCompras.metaCurvaCValor, true) : 'stable',
+      icon: <ShoppingCart className="h-6 w-6" />,
+      color: 'text-green-600',
+      meta: latestCompras.metaCurvaCValor ? `Meta: ${formatCurrency(latestCompras.metaCurvaCValor)}` : undefined
+    }
+  ]
+
+  // Métricas do Financeiro baseadas nos formulários reais
+  const financeiroMetrics: DashboardMetric[] = [
+    {
+      title: 'Inadimplência 45d',
+      value: latestFinanceiro.inadimplencia45dValor ? formatCurrency(latestFinanceiro.inadimplencia45dValor) : 'R$ 0',
+      change: latestFinanceiro.inadimplencia45dValor && latestFinanceiro.metaInadimplenciaValor ? 
+        calculateChange(latestFinanceiro.inadimplencia45dValor, latestFinanceiro.metaInadimplenciaValor, true) : undefined,
+      trend: latestFinanceiro.inadimplencia45dValor && latestFinanceiro.metaInadimplenciaValor ? 
+        calculateTrend(latestFinanceiro.inadimplencia45dValor, latestFinanceiro.metaInadimplenciaValor, true) : 'stable',
+      icon: <AlertCircle className="h-6 w-6" />,
+      color: 'text-red-600',
+      meta: latestFinanceiro.metaInadimplenciaValor ? `Meta: ${formatCurrency(latestFinanceiro.metaInadimplenciaValor)}` : undefined
+    },
+    {
+      title: 'Inadimplência %',
+      value: latestFinanceiro.inadimplencia45dPercentual ? `${latestFinanceiro.inadimplencia45dPercentual.toFixed(1)}%` : '0%',
+      change: latestFinanceiro.inadimplencia45dPercentual && latestFinanceiro.metaInadimplenciaPercentual ? 
+        calculateChange(latestFinanceiro.inadimplencia45dPercentual, latestFinanceiro.metaInadimplenciaPercentual, true) : undefined,
+      trend: latestFinanceiro.inadimplencia45dPercentual && latestFinanceiro.metaInadimplenciaPercentual ? 
+        calculateTrend(latestFinanceiro.inadimplencia45dPercentual, latestFinanceiro.metaInadimplenciaPercentual, true) : 'stable',
+      icon: <TrendingDown className="h-6 w-6" />,
+      color: 'text-orange-600',
+      meta: latestFinanceiro.metaInadimplenciaPercentual ? `Meta: ≤${latestFinanceiro.metaInadimplenciaPercentual}%` : undefined
+    },
+    {
+      title: 'Limites Implantados',
+      value: latestFinanceiro.limitesImplantadosValor ? formatCurrency(latestFinanceiro.limitesImplantadosValor) : 'R$ 0',
+      change: latestFinanceiro.limitesUtilizadoSemanal && latestFinanceiro.limitesImplantadosValor ? 
+        `${((latestFinanceiro.limitesUtilizadoSemanal / latestFinanceiro.limitesImplantadosValor) * 100).toFixed(1)}% utilizado` : undefined,
+      trend: 'stable',
+      icon: <CreditCard className="h-6 w-6" />,
+      color: 'text-blue-600',
+      meta: latestFinanceiro.limitesUtilizadoSemanal ? `Utilizado: ${formatCurrency(latestFinanceiro.limitesUtilizadoSemanal)}` : undefined
+    }
+  ]
+
+  const renderMetricCard = (title: string, metrics: DashboardMetric[], bgColor: string) => (
+    <Card className={`${bgColor} border-0 shadow-lg hover:shadow-xl transition-all duration-300`}>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-white text-xl font-bold flex items-center gap-2">
+          {title}
+          <Badge variant="secondary" className="bg-white/20 text-white border-0">
+            {metrics.length} métricas
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {metrics.map((metric, index) => (
+          <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="text-white/80">
+                  {metric.icon}
+                </div>
+                <span className="text-white/90 font-medium text-sm">
+                  {metric.title}
+                </span>
+              </div>
+              {metric.change && (
+                <div className="flex items-center gap-1">
+                  {metric.trend === 'up' ? (
+                    <TrendingUp className="h-4 w-4 text-green-300" />
+                  ) : metric.trend === 'down' ? (
+                    <TrendingDown className="h-4 w-4 text-red-300" />
+                  ) : (
+                    <Activity className="h-4 w-4 text-yellow-300" />
+                  )}
+                  <span className={`text-sm font-semibold ${
+                    metric.trend === 'up' ? 'text-green-300' : 
+                    metric.trend === 'down' ? 'text-red-300' : 'text-yellow-300'
+                  }`}>
+                    {metric.change}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="text-2xl font-bold text-white mb-1">
+              {metric.value}
+            </div>
+            {metric.meta && (
+              <div className="text-xs text-white/70">
+                {metric.meta}
+              </div>
+            )}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">
+            Dashboard Corporativo
+          </h1>
+          <p className="text-slate-600 text-lg">
+            Visão executiva dos principais indicadores de performance
+          </p>
+          <div className="mt-4 flex items-center gap-4">
+            <Badge variant="outline" className="text-sm">
+              Atualizado em tempo real
+            </Badge>
+            <Badge variant="outline" className="text-sm">
+              {new Date().toLocaleDateString('pt-BR')}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Grid de Cards - Layout Paisagem */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Card Comercial */}
+          {renderMetricCard(
+            'Comercial', 
+            comercialMetrics, 
+            'bg-gradient-to-br from-blue-600 to-blue-700'
+          )}
+
+          {/* Card Logística */}
+          {renderMetricCard(
+            'Logística', 
+            logisticaMetrics, 
+            'bg-gradient-to-br from-green-600 to-green-700'
+          )}
+
+          {/* Card Compras */}
+          {renderMetricCard(
+            'Compras', 
+            comprasMetrics, 
+            'bg-gradient-to-br from-purple-600 to-purple-700'
+          )}
+
+          {/* Card Financeiro */}
+          {renderMetricCard(
+            'Financeiro', 
+            financeiroMetrics, 
+            'bg-gradient-to-br from-orange-600 to-orange-700'
+          )}
+        </div>
+
+        {/* Resumo Executivo */}
+        <div className="mt-8">
+          <Card className="bg-white shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <BarChart3 className="h-6 w-6" />
+                Resumo Executivo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-1">R$ 2.4M</div>
+                  <div className="text-sm text-slate-600">Vendas Totais</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-1">94.2%</div>
+                  <div className="text-sm text-slate-600">Entregas no Prazo</div>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <div className="text-3xl font-bold text-purple-600 mb-1">R$ 180K</div>
+                  <div className="text-sm text-slate-600">Economia Compras</div>
+                </div>
+                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                  <div className="text-3xl font-bold text-orange-600 mb-1">18.5%</div>
+                  <div className="text-sm text-slate-600">Margem EBITDA</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}

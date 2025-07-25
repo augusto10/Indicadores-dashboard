@@ -18,8 +18,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error in daily reports cron job:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
     return NextResponse.json(
-      { message: 'Error sending daily reports', error: error.message },
+      { message: 'Error sending daily reports', error: errorMessage },
       { status: 500 }
     )
   }
@@ -37,8 +38,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error in manual daily reports trigger:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
     return NextResponse.json(
-      { message: 'Error sending daily reports', error: error.message },
+      { message: 'Error sending daily reports', error: errorMessage },
       { status: 500 }
     )
   }
