@@ -8,14 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Save, X } from 'lucide-react'
 
 interface ComercialFormData {
-  faturamentoDia: number
-  faturamentoMesAcumulado: number
-  metaFaturamentoDia: number
-  metaFaturamentoMes: number
-  positivacaoDia: number
-  positivacaoMesAcumulado: number
-  metaPositivacaoDia: number
-  metaPositivacaoMes: number
+  faturamentoDia: number | ''
+  faturamentoMesAcumulado: number | ''
+  metaFaturamentoDia: number | ''
+  metaFaturamentoMes: number | ''
+  positivacaoDia: number | ''
+  positivacaoMesAcumulado: number | ''
+  metaPositivacaoDia: number | ''
+  metaPositivacaoMes: number | ''
 }
 
 interface ComercialFormProps {
@@ -27,14 +27,14 @@ interface ComercialFormProps {
 
 export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: ComercialFormProps) {
   const [formData, setFormData] = useState<ComercialFormData>({
-    faturamentoDia: initialData?.faturamentoDia || 0,
-    faturamentoMesAcumulado: initialData?.faturamentoMesAcumulado || 0,
-    metaFaturamentoDia: initialData?.metaFaturamentoDia || 0,
-    metaFaturamentoMes: initialData?.metaFaturamentoMes || 0,
-    positivacaoDia: initialData?.positivacaoDia || 0,
-    positivacaoMesAcumulado: initialData?.positivacaoMesAcumulado || 0,
-    metaPositivacaoDia: initialData?.metaPositivacaoDia || 0,
-    metaPositivacaoMes: initialData?.metaPositivacaoMes || 0,
+    faturamentoDia: initialData?.faturamentoDia || '',
+    faturamentoMesAcumulado: initialData?.faturamentoMesAcumulado || '',
+    metaFaturamentoDia: initialData?.metaFaturamentoDia || '',
+    metaFaturamentoMes: initialData?.metaFaturamentoMes || '',
+    positivacaoDia: initialData?.positivacaoDia || '',
+    positivacaoMesAcumulado: initialData?.positivacaoMesAcumulado || '',
+    metaPositivacaoDia: initialData?.metaPositivacaoDia || '',
+    metaPositivacaoMes: initialData?.metaPositivacaoMes || '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,15 +45,21 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
   const handleInputChange = (field: keyof ComercialFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: parseFloat(value) || 0
+      [field]: value === '' ? '' : parseFloat(value) || 0
     }))
   }
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | '') => {
+    if (value === '' || value === 0) return 'R$ 0,00'
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(value)
+    }).format(Number(value))
+  }
+
+  const formatNumber = (value: number | '') => {
+    if (value === '' || value === 0) return '0'
+    return Number(value).toString()
   }
 
   return (
@@ -81,7 +87,7 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
                   step="0.01"
                   value={formData.faturamentoDia}
                   onChange={(e) => handleInputChange('faturamentoDia', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -93,7 +99,7 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
                   step="0.01"
                   value={formData.faturamentoMesAcumulado}
                   onChange={(e) => handleInputChange('faturamentoMesAcumulado', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -105,7 +111,7 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
                   step="0.01"
                   value={formData.metaFaturamentoDia}
                   onChange={(e) => handleInputChange('metaFaturamentoDia', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite a meta"
                 />
               </div>
 
@@ -117,7 +123,7 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
                   step="0.01"
                   value={formData.metaFaturamentoMes}
                   onChange={(e) => handleInputChange('metaFaturamentoMes', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite a meta"
                 />
               </div>
             </div>
@@ -133,7 +139,7 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
                   type="number"
                   value={formData.positivacaoDia}
                   onChange={(e) => handleInputChange('positivacaoDia', e.target.value)}
-                  placeholder="0"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -144,7 +150,7 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
                   type="number"
                   value={formData.positivacaoMesAcumulado}
                   onChange={(e) => handleInputChange('positivacaoMesAcumulado', e.target.value)}
-                  placeholder="0"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -155,7 +161,7 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
                   type="number"
                   value={formData.metaPositivacaoDia}
                   onChange={(e) => handleInputChange('metaPositivacaoDia', e.target.value)}
-                  placeholder="0"
+                  placeholder="Digite a meta"
                 />
               </div>
 
@@ -166,7 +172,7 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
                   type="number"
                   value={formData.metaPositivacaoMes}
                   onChange={(e) => handleInputChange('metaPositivacaoMes', e.target.value)}
-                  placeholder="0"
+                  placeholder="Digite a meta"
                 />
               </div>
             </div>
@@ -186,11 +192,11 @@ export function ComercialForm({ onSubmit, onCancel, initialData, isLoading }: Co
               </div>
               <div>
                 <span className="font-medium">Positivação Dia:</span>
-                <p>{formData.positivacaoDia}</p>
+                <p>{formatNumber(formData.positivacaoDia)}</p>
               </div>
               <div>
                 <span className="font-medium">Meta Positivação:</span>
-                <p>{formData.metaPositivacaoDia}</p>
+                <p>{formatNumber(formData.metaPositivacaoDia)}</p>
               </div>
             </div>
           </div>

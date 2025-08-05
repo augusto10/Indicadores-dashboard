@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Save, X } from 'lucide-react'
 
 interface FinanceiroFormData {
-  inadimplencia45dValor: number
-  inadimplencia45dPercentual: number
-  metaInadimplenciaValor: number
-  metaInadimplenciaPercentual: number
-  limitesImplantadosValor: number
-  limitesUtilizadoSemanal: number
+  inadimplencia45dValor: number | ''
+  inadimplencia45dPercentual: number | ''
+  metaInadimplenciaValor: number | ''
+  metaInadimplenciaPercentual: number | ''
+  limitesImplantadosValor: number | ''
+  limitesUtilizadoSemanal: number | ''
 }
 
 interface FinanceiroFormProps {
@@ -25,12 +25,12 @@ interface FinanceiroFormProps {
 
 export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: FinanceiroFormProps) {
   const [formData, setFormData] = useState<FinanceiroFormData>({
-    inadimplencia45dValor: initialData?.inadimplencia45dValor || 0,
-    inadimplencia45dPercentual: initialData?.inadimplencia45dPercentual || 0,
-    metaInadimplenciaValor: initialData?.metaInadimplenciaValor || 0,
-    metaInadimplenciaPercentual: initialData?.metaInadimplenciaPercentual || 0,
-    limitesImplantadosValor: initialData?.limitesImplantadosValor || 0,
-    limitesUtilizadoSemanal: initialData?.limitesUtilizadoSemanal || 0,
+    inadimplencia45dValor: initialData?.inadimplencia45dValor || '',
+    inadimplencia45dPercentual: initialData?.inadimplencia45dPercentual || '',
+    metaInadimplenciaValor: initialData?.metaInadimplenciaValor || '',
+    metaInadimplenciaPercentual: initialData?.metaInadimplenciaPercentual || '',
+    limitesImplantadosValor: initialData?.limitesImplantadosValor || '',
+    limitesUtilizadoSemanal: initialData?.limitesUtilizadoSemanal || '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,19 +41,23 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
   const handleInputChange = (field: keyof FinanceiroFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: parseFloat(value) || 0
+      [field]: value === '' ? '' : parseFloat(value) || 0
     }))
   }
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | '') => {
+    if (value === '' || value === 0) return 'R$ 0,00'
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(value)
+    }).format(Number(value))
   }
 
-  const getIndicatorColor = (value: number, target: number, isInverse: boolean = false) => {
-    const percentage = (value / target) * 100
+  const getIndicatorColor = (value: number | '', target: number | '', isInverse: boolean = false) => {
+    if (value === '' || target === '' || value === 0 || target === 0) return 'text-gray-500'
+    const numValue = Number(value)
+    const numTarget = Number(target)
+    const percentage = (numValue / numTarget) * 100
     if (isInverse) {
       // Para indicadores onde menor é melhor (inadimplência)
       if (percentage <= 100) return 'text-green-600'
@@ -68,8 +72,9 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
   }
 
   const calcularUtilizacaoLimites = () => {
-    if (formData.limitesImplantadosValor === 0) return 0
-    return (formData.limitesUtilizadoSemanal / formData.limitesImplantadosValor) * 100
+    if (formData.limitesImplantadosValor === '' || formData.limitesImplantadosValor === 0 || 
+        formData.limitesUtilizadoSemanal === '' || formData.limitesUtilizadoSemanal === 0) return 0
+    return (Number(formData.limitesUtilizadoSemanal) / Number(formData.limitesImplantadosValor)) * 100
   }
 
   return (
@@ -97,7 +102,7 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
                   step="0.01"
                   value={formData.inadimplencia45dValor}
                   onChange={(e) => handleInputChange('inadimplencia45dValor', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -111,7 +116,7 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
                   max="100"
                   value={formData.inadimplencia45dPercentual}
                   onChange={(e) => handleInputChange('inadimplencia45dPercentual', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -123,7 +128,7 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
                   step="0.01"
                   value={formData.metaInadimplenciaValor}
                   onChange={(e) => handleInputChange('metaInadimplenciaValor', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -137,7 +142,7 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
                   max="100"
                   value={formData.metaInadimplenciaPercentual}
                   onChange={(e) => handleInputChange('metaInadimplenciaPercentual', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
             </div>
@@ -154,7 +159,7 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
                   step="0.01"
                   value={formData.limitesImplantadosValor}
                   onChange={(e) => handleInputChange('limitesImplantadosValor', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
                 <p className="text-sm text-gray-500">Valor do mês anterior (M-1)</p>
               </div>
@@ -167,7 +172,7 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
                   step="0.01"
                   value={formData.limitesUtilizadoSemanal}
                   onChange={(e) => handleInputChange('limitesUtilizadoSemanal', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
                 <p className="text-sm text-gray-500">Valor utilizado na semana atual</p>
               </div>
@@ -195,10 +200,10 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
                   {formatCurrency(formData.inadimplencia45dValor)}
                 </p>
                 <p className={`text-lg font-semibold ${getIndicatorColor(formData.inadimplencia45dPercentual, formData.metaInadimplenciaPercentual, true)}`}>
-                  {formData.inadimplencia45dPercentual.toFixed(1)}%
+                  {formData.inadimplencia45dPercentual === '' ? '0.0' : Number(formData.inadimplencia45dPercentual).toFixed(1)}%
                 </p>
                 <p className="text-sm text-gray-500">
-                  Meta: {formatCurrency(formData.metaInadimplenciaValor)} ({formData.metaInadimplenciaPercentual}%)
+                  Meta: {formatCurrency(formData.metaInadimplenciaValor)} ({formData.metaInadimplenciaPercentual === '' ? '0' : formData.metaInadimplenciaPercentual}%)
                 </p>
               </div>
               
@@ -232,8 +237,11 @@ export function FinanceiroForm({ onSubmit, onCancel, initialData, isLoading }: F
             <div className="p-4 bg-red-50 rounded-lg">
               <h5 className="font-semibold text-red-800 mb-2">Status Inadimplência:</h5>
               <div className="text-sm text-red-700">
-                {formData.inadimplencia45dValor <= formData.metaInadimplenciaValor ? (
+                {(formData.inadimplencia45dValor !== '' && formData.metaInadimplenciaValor !== '' && 
+                  Number(formData.inadimplencia45dValor) <= Number(formData.metaInadimplenciaValor)) ? (
                   <p className="text-green-700">✅ Meta de inadimplência atingida</p>
+                ) : formData.inadimplencia45dValor === '' || formData.metaInadimplenciaValor === '' ? (
+                  <p className="text-gray-500">Preencha os valores para ver o status</p>
                 ) : (
                   <p>⚠️ Inadimplência acima da meta estabelecida</p>
                 )}

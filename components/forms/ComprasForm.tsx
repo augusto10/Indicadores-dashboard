@@ -8,18 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Save, X } from 'lucide-react'
 
 interface ComprasFormData {
-  rupturaMesValor: number
-  rupturaMesPercentual: number
-  metaRupturaValor: number
-  metaRupturaPercentual: number
-  coberturaEstoqueValor: number
-  metaCoberturaEstoque: number
-  mediaDiaria: number
-  mediaDias: number
-  curvaCValor: number
-  curvaCPercentual: number
-  metaCurvaCValor: number
-  metaCurvaCPercentual: number
+  rupturaMesValor: number | ''
+  rupturaMesPercentual: number | ''
+  metaRupturaValor: number | ''
+  metaRupturaPercentual: number | ''
+  coberturaEstoqueValor: number | ''
+  metaCoberturaEstoque: number | ''
+  mediaDiaria: number | ''
+  mediaDias: number | ''
+  curvaCValor: number | ''
+  curvaCPercentual: number | ''
+  metaCurvaCValor: number | ''
+  metaCurvaCPercentual: number | ''
 }
 
 interface ComprasFormProps {
@@ -31,18 +31,18 @@ interface ComprasFormProps {
 
 export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: ComprasFormProps) {
   const [formData, setFormData] = useState<ComprasFormData>({
-    rupturaMesValor: initialData?.rupturaMesValor || 0,
-    rupturaMesPercentual: initialData?.rupturaMesPercentual || 0,
-    metaRupturaValor: initialData?.metaRupturaValor || 0,
-    metaRupturaPercentual: initialData?.metaRupturaPercentual || 0,
-    coberturaEstoqueValor: initialData?.coberturaEstoqueValor || 0,
-    metaCoberturaEstoque: initialData?.metaCoberturaEstoque || 45,
-    mediaDiaria: initialData?.mediaDiaria || 0,
-    mediaDias: initialData?.mediaDias || 0,
-    curvaCValor: initialData?.curvaCValor || 0,
-    curvaCPercentual: initialData?.curvaCPercentual || 0,
-    metaCurvaCValor: initialData?.metaCurvaCValor || 0,
-    metaCurvaCPercentual: initialData?.metaCurvaCPercentual || 0,
+    rupturaMesValor: initialData?.rupturaMesValor || '',
+    rupturaMesPercentual: initialData?.rupturaMesPercentual || '',
+    metaRupturaValor: initialData?.metaRupturaValor || '',
+    metaRupturaPercentual: initialData?.metaRupturaPercentual || '',
+    coberturaEstoqueValor: initialData?.coberturaEstoqueValor || '',
+    metaCoberturaEstoque: initialData?.metaCoberturaEstoque || '',
+    mediaDiaria: initialData?.mediaDiaria || '',
+    mediaDias: initialData?.mediaDias || '',
+    curvaCValor: initialData?.curvaCValor || '',
+    curvaCPercentual: initialData?.curvaCPercentual || '',
+    metaCurvaCValor: initialData?.metaCurvaCValor || '',
+    metaCurvaCPercentual: initialData?.metaCurvaCPercentual || '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,19 +53,23 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
   const handleInputChange = (field: keyof ComprasFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: parseFloat(value) || 0
+      [field]: value === '' ? '' : parseFloat(value) || 0
     }))
   }
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | '') => {
+    if (value === '' || value === 0) return 'R$ 0,00'
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(value)
+    }).format(Number(value))
   }
 
-  const getIndicatorColor = (value: number, target: number, isInverse: boolean = false) => {
-    const percentage = (value / target) * 100
+  const getIndicatorColor = (value: number | '', target: number | '', isInverse: boolean = false) => {
+    if (value === '' || target === '' || value === 0 || target === 0) return 'text-gray-500'
+    const numValue = Number(value)
+    const numTarget = Number(target)
+    const percentage = (numValue / numTarget) * 100
     if (isInverse) {
       // Para indicadores onde menor é melhor (ruptura)
       if (percentage <= 100) return 'text-green-600'
@@ -104,7 +108,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   step="0.01"
                   value={formData.rupturaMesValor}
                   onChange={(e) => handleInputChange('rupturaMesValor', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -118,7 +122,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   max="100"
                   value={formData.rupturaMesPercentual}
                   onChange={(e) => handleInputChange('rupturaMesPercentual', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -130,7 +134,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   step="0.01"
                   value={formData.metaRupturaValor}
                   onChange={(e) => handleInputChange('metaRupturaValor', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -144,7 +148,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   max="100"
                   value={formData.metaRupturaPercentual}
                   onChange={(e) => handleInputChange('metaRupturaPercentual', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
             </div>
@@ -161,7 +165,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   step="0.01"
                   value={formData.coberturaEstoqueValor}
                   onChange={(e) => handleInputChange('coberturaEstoqueValor', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -185,7 +189,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   step="0.01"
                   value={formData.mediaDiaria}
                   onChange={(e) => handleInputChange('mediaDiaria', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
               </div>
 
@@ -215,7 +219,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                     step="0.01"
                     value={formData.curvaCValor}
                     onChange={(e) => handleInputChange('curvaCValor', e.target.value)}
-                    placeholder="0,00"
+                    placeholder="Digite o valor"
                   />
                 </div>
 
@@ -229,7 +233,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                     max="100"
                     value={formData.curvaCPercentual}
                     onChange={(e) => handleInputChange('curvaCPercentual', e.target.value)}
-                    placeholder="0,00"
+                    placeholder="Digite o valor"
                   />
                 </div>
               </div>
@@ -243,7 +247,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                     step="0.01"
                     value={formData.metaCurvaCValor}
                     onChange={(e) => handleInputChange('metaCurvaCValor', e.target.value)}
-                    placeholder="0,00"
+                    placeholder="Digite o valor"
                   />
                 </div>
 
@@ -257,7 +261,7 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                     max="100"
                     value={formData.metaCurvaCPercentual}
                     onChange={(e) => handleInputChange('metaCurvaCPercentual', e.target.value)}
-                    placeholder="0,00"
+                    placeholder="Digite o valor"
                   />
                 </div>
               </div>
@@ -274,9 +278,9 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   {formatCurrency(formData.rupturaMesValor)}
                 </p>
                 <p className={`text-sm font-semibold ${getIndicatorColor(formData.rupturaMesPercentual, formData.metaRupturaPercentual, true)}`}>
-                  {formData.rupturaMesPercentual.toFixed(1)}%
+                  {formData.rupturaMesPercentual === '' ? '0.0' : Number(formData.rupturaMesPercentual).toFixed(1)}%
                 </p>
-                <p className="text-xs text-gray-500">Meta: {formatCurrency(formData.metaRupturaValor)} ({formData.metaRupturaPercentual}%)</p>
+                <p className="text-xs text-gray-500">Meta: {formatCurrency(formData.metaRupturaValor)} ({formData.metaRupturaPercentual === '' ? '0' : formData.metaRupturaPercentual}%)</p>
               </div>
               
               <div className="p-3 bg-white rounded border">
@@ -285,9 +289,9 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   {formatCurrency(formData.coberturaEstoqueValor)}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {formData.mediaDias} dias
+                  {formData.mediaDias === '' ? '0' : formData.mediaDias} dias
                 </p>
-                <p className="text-xs text-gray-500">Meta: {formData.metaCoberturaEstoque} dias</p>
+                <p className="text-xs text-gray-500">Meta: {formData.metaCoberturaEstoque === '' ? '0' : formData.metaCoberturaEstoque} dias</p>
               </div>
               
               <div className="p-3 bg-white rounded border">
@@ -296,9 +300,9 @@ export function ComprasForm({ onSubmit, onCancel, initialData, isLoading }: Comp
                   {formatCurrency(formData.curvaCValor)}
                 </p>
                 <p className={`text-sm font-semibold ${getIndicatorColor(formData.curvaCPercentual, formData.metaCurvaCPercentual)}`}>
-                  {formData.curvaCPercentual.toFixed(1)}%
+                  {formData.curvaCPercentual === '' ? '0.0' : Number(formData.curvaCPercentual).toFixed(1)}%
                 </p>
-                <p className="text-xs text-gray-500">Meta: {formatCurrency(formData.metaCurvaCValor)} ({formData.metaCurvaCPercentual}%)</p>
+                <p className="text-xs text-gray-500">Meta: {formatCurrency(formData.metaCurvaCValor)} ({formData.metaCurvaCPercentual === '' ? '0' : formData.metaCurvaCPercentual}%)</p>
               </div>
 
               <div className="p-3 bg-white rounded border">

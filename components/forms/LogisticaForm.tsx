@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Save, X } from 'lucide-react'
 
 interface LogisticaFormData {
-  otifMes: number
-  metaOtif: number
-  taxaDevolucaoMes: number
-  metaTaxaDevolucao: number
-  custoLogisticoMes: number
-  metaCustoLogistico: number
+  otifMes: number | ''
+  metaOtif: number | ''
+  taxaDevolucaoMes: number | ''
+  metaTaxaDevolucao: number | ''
+  custoLogisticoMes: number | ''
+  metaCustoLogistico: number | ''
 }
 
 interface LogisticaFormProps {
@@ -25,12 +25,12 @@ interface LogisticaFormProps {
 
 export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: LogisticaFormProps) {
   const [formData, setFormData] = useState<LogisticaFormData>({
-    otifMes: initialData?.otifMes || 0,
-    metaOtif: initialData?.metaOtif || 95,
-    taxaDevolucaoMes: initialData?.taxaDevolucaoMes || 0,
-    metaTaxaDevolucao: initialData?.metaTaxaDevolucao || 5,
-    custoLogisticoMes: initialData?.custoLogisticoMes || 0,
-    metaCustoLogistico: initialData?.metaCustoLogistico || 3.5,
+    otifMes: initialData?.otifMes || '',
+    metaOtif: initialData?.metaOtif || '',
+    taxaDevolucaoMes: initialData?.taxaDevolucaoMes || '',
+    metaTaxaDevolucao: initialData?.metaTaxaDevolucao || '',
+    custoLogisticoMes: initialData?.custoLogisticoMes || '',
+    metaCustoLogistico: initialData?.metaCustoLogistico || '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,12 +41,15 @@ export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: Lo
   const handleInputChange = (field: keyof LogisticaFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: parseFloat(value) || 0
+      [field]: value === '' ? '' : parseFloat(value) || 0
     }))
   }
 
-  const getIndicatorColor = (value: number, target: number, isInverse: boolean = false) => {
-    const percentage = (value / target) * 100
+  const getIndicatorColor = (value: number | '', target: number | '', isInverse: boolean = false) => {
+    if (value === '' || target === '' || value === 0 || target === 0) return 'text-gray-500'
+    const numValue = Number(value)
+    const numTarget = Number(target)
+    const percentage = (numValue / numTarget) * 100
     if (isInverse) {
       // Para indicadores onde menor é melhor (taxa de devolução, custo logístico)
       if (percentage <= 100) return 'text-green-600'
@@ -87,7 +90,7 @@ export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: Lo
                   max="100"
                   value={formData.otifMes}
                   onChange={(e) => handleInputChange('otifMes', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
                 <p className="text-sm text-gray-500">Dados de 2 dias atrás</p>
               </div>
@@ -102,7 +105,7 @@ export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: Lo
                   max="100"
                   value={formData.metaOtif}
                   onChange={(e) => handleInputChange('metaOtif', e.target.value)}
-                  placeholder="95,00"
+                  placeholder="Digite a meta (ex: 95)"
                 />
                 <p className="text-sm text-gray-500">Meta padrão: 95%</p>
               </div>
@@ -122,7 +125,7 @@ export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: Lo
                   max="100"
                   value={formData.taxaDevolucaoMes}
                   onChange={(e) => handleInputChange('taxaDevolucaoMes', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
                 <p className="text-sm text-gray-500">Dados de 1 dia atrás</p>
               </div>
@@ -137,7 +140,7 @@ export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: Lo
                   max="100"
                   value={formData.metaTaxaDevolucao}
                   onChange={(e) => handleInputChange('metaTaxaDevolucao', e.target.value)}
-                  placeholder="5,00"
+                  placeholder="Digite a meta (ex: 5)"
                 />
                 <p className="text-sm text-gray-500">Meta padrão: 5%</p>
               </div>
@@ -157,7 +160,7 @@ export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: Lo
                   max="100"
                   value={formData.custoLogisticoMes}
                   onChange={(e) => handleInputChange('custoLogisticoMes', e.target.value)}
-                  placeholder="0,00"
+                  placeholder="Digite o valor"
                 />
                 <p className="text-sm text-gray-500">Dados de 2 dias atrás</p>
               </div>
@@ -172,7 +175,7 @@ export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: Lo
                   max="100"
                   value={formData.metaCustoLogistico}
                   onChange={(e) => handleInputChange('metaCustoLogistico', e.target.value)}
-                  placeholder="3,50"
+                  placeholder="Digite a meta (ex: 3.5)"
                 />
                 <p className="text-sm text-gray-500">Meta padrão: 3,5%</p>
               </div>
@@ -186,25 +189,25 @@ export function LogisticaForm({ onSubmit, onCancel, initialData, isLoading }: Lo
               <div className="p-3 bg-white rounded border">
                 <h5 className="font-medium text-blue-600">OTIF</h5>
                 <p className={`text-2xl font-bold ${getIndicatorColor(formData.otifMes, formData.metaOtif)}`}>
-                  {formData.otifMes.toFixed(1)}%
+                  {formData.otifMes === '' ? '0.0' : Number(formData.otifMes).toFixed(1)}%
                 </p>
-                <p className="text-sm text-gray-500">Meta: {formData.metaOtif}%</p>
+                <p className="text-sm text-gray-500">Meta: {formData.metaOtif === '' ? '0' : formData.metaOtif}%</p>
               </div>
               
               <div className="p-3 bg-white rounded border">
                 <h5 className="font-medium text-orange-600">Taxa Devolução</h5>
                 <p className={`text-2xl font-bold ${getIndicatorColor(formData.taxaDevolucaoMes, formData.metaTaxaDevolucao, true)}`}>
-                  {formData.taxaDevolucaoMes.toFixed(1)}%
+                  {formData.taxaDevolucaoMes === '' ? '0.0' : Number(formData.taxaDevolucaoMes).toFixed(1)}%
                 </p>
-                <p className="text-sm text-gray-500">Meta: ≤{formData.metaTaxaDevolucao}%</p>
+                <p className="text-sm text-gray-500">Meta: ≤{formData.metaTaxaDevolucao === '' ? '0' : formData.metaTaxaDevolucao}%</p>
               </div>
               
               <div className="p-3 bg-white rounded border">
                 <h5 className="font-medium text-purple-600">Custo Logístico</h5>
                 <p className={`text-2xl font-bold ${getIndicatorColor(formData.custoLogisticoMes, formData.metaCustoLogistico, true)}`}>
-                  {formData.custoLogisticoMes.toFixed(1)}%
+                  {formData.custoLogisticoMes === '' ? '0.0' : Number(formData.custoLogisticoMes).toFixed(1)}%
                 </p>
-                <p className="text-sm text-gray-500">Meta: ≤{formData.metaCustoLogistico}%</p>
+                <p className="text-sm text-gray-500">Meta: ≤{formData.metaCustoLogistico === '' ? '0' : formData.metaCustoLogistico}%</p>
               </div>
             </div>
           </div>
