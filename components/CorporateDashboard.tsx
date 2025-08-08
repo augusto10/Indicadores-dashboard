@@ -17,6 +17,7 @@ import {
   CreditCard
 } from 'lucide-react'
 import { IndicatorCard } from '@/components/IndicatorCard'
+import { safeDivide, clampPercent, formatPercent } from '@/utils/format'
 
 interface DashboardMetric {
   title: string
@@ -36,7 +37,7 @@ interface CorporateDashboardProps {
 
 // Função para calcular tendência baseada em valor vs meta
 function calculateTrend(value: number, meta: number, isInverse: boolean = false): 'up' | 'down' | 'stable' {
-  const percentage = (value / meta) * 100
+  const percentage = clampPercent(safeDivide(value, meta, 0) * 100, 0, 200)
   if (isInverse) {
     // Para indicadores onde menor é melhor
     return percentage <= 100 ? 'up' : 'down'
@@ -48,9 +49,11 @@ function calculateTrend(value: number, meta: number, isInverse: boolean = false)
 
 // Função para calcular mudança percentual
 function calculateChange(value: number, meta: number, isInverse: boolean = false): string {
-  const percentage = (value / meta) * 100
-  const diff = isInverse ? (100 - percentage) : (percentage - 100)
-  return `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`
+  const percentage = clampPercent(safeDivide(value, meta, 0) * 100, 0, 200)
+  const diffRaw = isInverse ? (100 - percentage) : (percentage - 100)
+  const diff = clampPercent(diffRaw, -100, 100)
+  const sign = diff >= 0 ? '+' : ''
+  return `${sign}${formatPercent(Math.abs(diff))}`
 }
 
 // Função para formatar moeda

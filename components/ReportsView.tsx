@@ -90,7 +90,7 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
       case 'COMERCIAL':
         // Comercial: < 80% = vermelho, 80-99.9% = laranja, >= 100% = verde
         if (metaNum > 0) {
-          const percentual = (realizadoNum / metaNum) * 100
+          const percentual = clampPercent(safeDivide(realizadoNum, metaNum, 0) * 100, 0, 200)
           if (percentual < 80) return 'text-red-600'
           if (percentual < 100) return 'text-orange-600'
           return 'text-green-600'
@@ -115,7 +115,8 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
       case 'COMPRAS':
         if (indicatorName.includes('RUPTURA') || indicatorName.includes('Ruptura')) {
           // Ruptura: < 5% = verde, >= 5% = vermelho
-          return realizadoNum < 5 ? 'text-green-600' : 'text-red-600'
+          const percentualRuptura = clampPercent(safeDivide(realizadoNum, 100, 0) * 100, 0, 200)
+          return percentualRuptura < 5 ? 'text-green-600' : 'text-red-600'
         }
         if (indicatorName.includes('COBERTURA') || indicatorName.includes('Cobertura')) {
           // Cobertura de estoque: < 45 dias = verde, >= 45 = vermelho
@@ -123,14 +124,16 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
         }
         if (indicatorName.includes('CURVA C') || indicatorName.includes('Curva C')) {
           // Curva C: < 20% = verde, >= 20% = vermelho
-          return realizadoNum < 20 ? 'text-green-600' : 'text-red-600'
+          const percentualCurvaC = clampPercent(safeDivide(realizadoNum, 100, 0) * 100, 0, 200)
+          return percentualCurvaC < 20 ? 'text-green-600' : 'text-red-600'
         }
         break
 
       case 'FINANCEIRO':
         if (indicatorName.includes('INADIMPLÊNCIA') || indicatorName.includes('Inadimplência')) {
           // Inadimplência: < 1% = verde, >= 1% = vermelho
-          return realizadoNum < 1 ? 'text-green-600' : 'text-red-600'
+          const percentualInadimplencia = clampPercent(safeDivide(realizadoNum, 100, 0) * 100, 0, 200)
+          return percentualInadimplencia < 1 ? 'text-green-600' : 'text-red-600'
         }
         break
 
@@ -515,15 +518,15 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
                           <span>Atual:</span>
-                          <span className="font-medium">{stat.latest?.value?.toFixed(1) || '0'}</span>
+                          <span className="font-medium">{formatNumber(Number(stat.latest?.value ?? 0), 1)}</span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span>Média:</span>
-                          <span>{stat.average?.toFixed(1) || '0'}</span>
+                          <span>{formatNumber(Number(stat.average ?? 0), 1)}</span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span>Registros:</span>
-                          <span>{stat.count}</span>
+                          <span>{formatNumber(Number(stat.count ?? 0))}</span>
                         </div>
                       </div>
                     </div>
