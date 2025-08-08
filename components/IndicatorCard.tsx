@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Edit, Trash2, TrendingUp, TrendingDown, Target } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { safeDivide, clampPercent, formatPercent, formatNumber } from '../utils/format'
 
 interface IndicatorCardProps {
   indicator: any
@@ -12,7 +13,9 @@ interface IndicatorCardProps {
 }
 
 export function IndicatorCard({ indicator, onEdit, onDelete }: IndicatorCardProps) {
-  const percentage = (indicator.value / indicator.target) * 100
+  // Safe percentage with clamping to avoid absurd values like 1666050.4%
+  const percentageRaw = safeDivide(indicator?.value ?? 0, indicator?.target ?? 0, 0) * 100
+  const percentage = clampPercent(percentageRaw, 0, 200)
   const isOnTarget = indicator.value >= indicator.target
   const isNearTarget = indicator.value >= indicator.target * 0.8
 
@@ -32,6 +35,35 @@ export function IndicatorCard({ indicator, onEdit, onDelete }: IndicatorCardProp
     if (isOnTarget) return 'bg-green-500'
     if (isNearTarget) return 'bg-yellow-500'
     return 'bg-red-500'
+  }
+
+  const renderSparkline = (data?: number[]) => {
+    if (!data || data.length < 2) return null
+    const width = 72
+    const height = 28
+    const min = Math.min(...data)
+    const max = Math.max(...data)
+    const range = max - min || 1
+    const points = data
+      .map((v, i) => {
+        const x = (i / (data.length - 1)) * width
+        const y = height - ((v - min) / range) * height
+        return `${x.toFixed(1)},${y.toFixed(1)}`
+      })
+      .join(' ')
+    const positiveTrend = data[data.length - 1] >= data[0]
+    const stroke = positiveTrend ? '#16a34a' : '#dc2626' // green-600 / red-600
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="ml-2">
+        <polyline
+          fill="none"
+          stroke={stroke}
+          strokeWidth="2"
+          points={points}
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    )
   }
 
   return (
@@ -77,16 +109,17 @@ export function IndicatorCard({ indicator, onEdit, onDelete }: IndicatorCardProp
           <div className="flex items-center space-x-2">
             {getStatusIcon()}
             <span className="text-2xl font-bold text-gray-900">
-              {indicator.value.toLocaleString('pt-BR')}
+              {formatNumber(indicator.value)}
             </span>
             {indicator.unit && (
               <span className="text-sm text-gray-500">{indicator.unit}</span>
             )}
+            {renderSparkline(indicator.trendData)}
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Meta</p>
             <p className="text-lg font-semibold text-gray-700">
-              {indicator.target.toLocaleString('pt-BR')}
+              {formatNumber(indicator.target)}
               {indicator.unit && <span className="text-sm ml-1">{indicator.unit}</span>}
             </p>
           </div>
@@ -99,7 +132,7 @@ export function IndicatorCard({ indicator, onEdit, onDelete }: IndicatorCardProp
               isOnTarget ? 'text-green-600' : 
               isNearTarget ? 'text-yellow-600' : 'text-red-600'
             }`}>
-              {percentage.toFixed(1)}%
+              {formatPercent(percentage)}
             </span>
           </div>
           <div className="progress-bar">
@@ -119,7 +152,7 @@ export function IndicatorCard({ indicator, onEdit, onDelete }: IndicatorCardProp
             percentage >= 100 ? 'text-green-600' : 
             percentage >= 80 ? 'text-yellow-600' : 'text-red-600'
           }`}>
-            {percentage >= 100 ? '+' : ''}{(percentage - 100).toFixed(1)}%
+            {percentage >= 100 ? '+' : ''}{formatPercent(clampPercent(percentage - 100, -100, 100))}
           </span>
         </div>
       </div>
