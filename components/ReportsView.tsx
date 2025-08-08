@@ -14,6 +14,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { formatCurrencyBRL, formatPercent, safeDivide, clampPercent, formatNumber } from '@/utils/format'
 
 interface ReportMetric {
   label: string
@@ -60,21 +61,14 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
   // Função para formatar valores
   const formatValue = (value: number | string, unit?: string): string => {
     if (typeof value === 'string') return value
-    
     if (unit === 'currency') {
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(value)
+      return formatCurrencyBRL(value)
     }
-    
     if (unit === 'percentage') {
-      return `${value.toFixed(1)}%`
+      const pct = clampPercent(value, 0, 200)
+      return formatPercent(pct)
     }
-    
-    return value.toString()
+    return formatNumber(value)
   }
 
   // Função para determinar se há dados ou não
