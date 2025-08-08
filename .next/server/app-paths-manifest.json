@@ -1,9 +1,0 @@
-{
-  "/relatorios/page": "app/relatorios/page.js",
-  "/auth/signin/page": "app/auth/signin/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/page": "app/page.js",
-  "/dashboard/panel/page": "app/dashboard/panel/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/indicators/page": "app/dashboard/indicators/page.js"
-}

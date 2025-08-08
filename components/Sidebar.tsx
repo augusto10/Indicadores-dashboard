@@ -22,6 +22,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Meu Painel', href: '/dashboard/panel', icon: Target },
   { name: 'Indicadores', href: '/dashboard/indicators', icon: TrendingUp },
+  { name: 'Gráficos', href: '/dashboard/charts', icon: BarChart3 },
   { name: 'Metas', href: '/dashboard/goals', icon: BarChart3 },
 ]
 
