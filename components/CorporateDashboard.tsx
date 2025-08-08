@@ -16,6 +16,7 @@ import {
   Package,
   CreditCard
 } from 'lucide-react'
+import { IndicatorCard } from '@/components/IndicatorCard'
 
 interface DashboardMetric {
   title: string
@@ -305,6 +306,49 @@ export function CorporateDashboard({ indicators = [], goals = [] }: CorporateDas
               {new Date().toLocaleDateString('pt-BR')}
             </Badge>
           </div>
+        </div>
+
+        {/* Destaques com IndicatorCard (validação visual) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <IndicatorCard
+            indicator={{
+              name: 'Faturamento Mês',
+              description: 'Performance vs Meta',
+              value: latestComercial.faturamentoMesAcumulado ?? 0,
+              target: latestComercial.metaFaturamentoMes ?? 0,
+              unit: 'R$',
+              updatedAt: new Date(),
+              trendData: (latestComercial.faturamentoMesAcumulado && latestComercial.metaFaturamentoMes)
+                ? [
+                    Number(latestComercial.metaFaturamentoMes) * 0.7,
+                    Number(latestComercial.metaFaturamentoMes) * 0.85,
+                    Number(latestComercial.faturamentoMesAcumulado)
+                  ]
+                : undefined,
+            }}
+            onEdit={() => {}}
+            onDelete={() => {}}
+          />
+
+          <IndicatorCard
+            indicator={{
+              name: 'OTIF',
+              description: 'On Time In Full',
+              value: logisticaData[0]?.data?.otifPercentual ?? 0,
+              target: 95,
+              unit: '%',
+              updatedAt: new Date(),
+              trendData: (logisticaData[0]?.data?.otifPercentual)
+                ? [
+                    90,
+                    93,
+                    Number(logisticaData[0]?.data?.otifPercentual)
+                  ]
+                : undefined,
+            }}
+            onEdit={() => {}}
+            onDelete={() => {}}
+          />
         </div>
 
         {/* Grid de Cards - Layout Paisagem */}
