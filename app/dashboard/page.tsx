@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import type { Prisma, Department } from '@prisma/client'
 import { DashboardOverview } from '@/components/DashboardOverview'
 import { MetricsGrid } from '@/components/MetricsGrid'
 import { RecentActivity } from '@/components/RecentActivity'
@@ -8,8 +9,10 @@ import { IndicatorCharts } from '@/components/IndicatorCharts'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 async function getDashboardData(userDepartment?: string, isDirector: boolean = false) {
-  // Se for diretor, buscar todos os indicadores. Caso contrário, filtrar por departamento
-  const indicatorFilter = isDirector ? {} : { department: userDepartment }
+  // Se for diretor, buscar todos os indicadores. Caso contrário, filtrar por departamento (enum Prisma)
+  const indicatorFilter: Prisma.IndicatorWhereInput = (isDirector || !userDepartment)
+    ? {}
+    : { department: userDepartment as Department }
   
   const [indicators, goals] = await Promise.all([
     prisma.indicator.findMany({
@@ -30,7 +33,7 @@ async function getDashboardData(userDepartment?: string, isDirector: boolean = f
     prisma.goal.findMany({
       where: {
         isActive: true,
-        ...(isDirector ? {} : { department: userDepartment })
+        ...(isDirector || !userDepartment ? {} : { department: userDepartment as Department })
       },
       orderBy: {
         createdAt: 'desc',
@@ -81,6 +84,9 @@ export default async function DashboardPage() {
           <IndicatorCharts 
             indicators={indicators.map(ind => ({
               ...ind,
+              // normalizar tipos para o componente de gráficos
+              unit: ind.unit ?? undefined,
+              department: String(ind.department),
               date: new Date(ind.date)
             }))}
             userDepartment={session?.user?.department}
@@ -90,8 +96,8 @@ export default async function DashboardPage() {
         
         <TabsContent value="details" className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
-            <MetricsGrid indicators={indicators} goals={goals} showAllDetails={true} />
-            <RecentActivity indicators={indicators} showAllActivities={true} />
+            <MetricsGrid indicators={indicators} goals={goals} />
+            <RecentActivity indicators={indicators} />
           </div>
         </TabsContent>
       </Tabs>

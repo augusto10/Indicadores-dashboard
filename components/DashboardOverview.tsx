@@ -26,7 +26,8 @@ export function DashboardOverview({ indicators, goals }: DashboardOverviewProps)
     return acc
   }, {} as Record<string, { total: number; achieved: number }>)
 
-  const overallPerformance = Object.values(departmentStats).reduce(
+  const deptValues = Object.values(departmentStats) as { total: number; achieved: number }[]
+  const overallPerformance = deptValues.reduce(
     (acc, dept) => {
       acc.total += dept.total
       acc.achieved += dept.achieved

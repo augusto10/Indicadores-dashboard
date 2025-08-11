@@ -76,8 +76,9 @@ export function MetricsGrid({ indicators, goals }: MetricsGridProps) {
       <h2 className="text-xl font-semibold text-gray-900">Indicadores por Departamento</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(departmentMetrics).map(([department, deptIndicators], index) => {
-          const performance = getDepartmentPerformance(deptIndicators)
+        {(Object.entries(departmentMetrics) as [string, any[]][]) .map(([department, deptIndicators], index) => {
+          const arr = deptIndicators as any[]
+          const performance = getDepartmentPerformance(arr)
           const DepartmentIcon = departmentIcons[department as keyof typeof departmentIcons]
           const gradientColor = departmentColors[department as keyof typeof departmentColors]
           
@@ -96,7 +97,7 @@ export function MetricsGrid({ indicators, goals }: MetricsGridProps) {
                     <DepartmentIcon className="w-6 h-6" />
                     <div>
                       <h3 className="text-lg font-semibold">{department}</h3>
-                      <p className="text-sm opacity-90">{deptIndicators.length} indicadores</p>
+                      <p className="text-sm opacity-90">{arr.length} indicadores</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -118,7 +119,7 @@ export function MetricsGrid({ indicators, goals }: MetricsGridProps) {
 
               {/* Indicators List */}
               <div className="p-4 space-y-3">
-                {deptIndicators.slice(0, 3).map((indicator, idx) => (
+                {arr.slice(0, 3).map((indicator, idx) => (
                   <div key={indicator.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{indicator.name}</p>
@@ -138,10 +139,10 @@ export function MetricsGrid({ indicators, goals }: MetricsGridProps) {
                   </div>
                 ))}
                 
-                {deptIndicators.length > 3 && (
+                {arr.length > 3 && (
                   <div className="text-center pt-2">
                     <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                      Ver mais {deptIndicators.length - 3} indicadores
+                      Ver mais {arr.length - 3} indicadores
                     </button>
                   </div>
                 )}

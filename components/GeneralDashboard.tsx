@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   TrendingUp, 
@@ -61,11 +61,7 @@ export function GeneralDashboard({ userId }: GeneralDashboardProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('30') // days
 
-  useEffect(() => {
-    fetchConsolidatedData()
-  }, [timeRange])
-
-  const fetchConsolidatedData = async () => {
+  const fetchConsolidatedData = useCallback(async () => {
     setIsLoading(true)
     try {
       // Buscar todos os indicadores
@@ -86,7 +82,11 @@ export function GeneralDashboard({ userId }: GeneralDashboardProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [timeRange])
+
+  useEffect(() => {
+    fetchConsolidatedData()
+  }, [fetchConsolidatedData])
 
   const calculateConsolidatedMetrics = (indicators: any[], goals: any[]): ConsolidatedMetrics => {
     const departmentGroups = indicators.reduce((acc, indicator) => {
@@ -97,18 +97,20 @@ export function GeneralDashboard({ userId }: GeneralDashboardProps) {
       return acc
     }, {} as Record<string, any[]>)
 
-    const departmentPerformance: DepartmentSummary[] = Object.entries(departmentGroups).map(([dept, deptIndicators]) => {
-      const avgPerformance = deptIndicators.reduce((sum, ind) => {
+    const departmentPerformance: DepartmentSummary[] = (Object.entries(departmentGroups) as [string, any[]][])
+      .map(([dept, deptIndicators]) => {
+      const arr = deptIndicators as any[]
+      const avgPerformance = arr.reduce((sum, ind) => {
         const performance = ind.target > 0 ? (ind.value / ind.target) * 100 : 0
         return sum + performance
-      }, 0) / deptIndicators.length
+      }, 0) / arr.length
 
       return {
         department: dept,
-        totalIndicators: deptIndicators.length,
+        totalIndicators: arr.length,
         averagePerformance: avgPerformance,
         trend: avgPerformance > 80 ? 'up' : avgPerformance > 60 ? 'stable' : 'down',
-        topIndicators: deptIndicators.slice(0, 3)
+        topIndicators: arr.slice(0, 3)
       }
     })
 
@@ -350,7 +352,8 @@ export function GeneralDashboard({ userId }: GeneralDashboardProps) {
             >
               <IndicatorCard
                 indicator={indicator}
-                showDepartment={selectedDepartment === 'ALL'}
+                onEdit={() => {}}
+                onDelete={() => {}}
               />
             </motion.div>
           ))}

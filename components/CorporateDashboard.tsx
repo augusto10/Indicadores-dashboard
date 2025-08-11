@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
@@ -77,11 +78,46 @@ function formatLargeNumber(value: number): string {
 }
 
 export function CorporateDashboard({ indicators = [], goals = [] }: CorporateDashboardProps) {
+  const [departmentFilter, setDepartmentFilter] = useState<'TODOS' | 'COMERCIAL' | 'LOGISTICA' | 'COMPRAS' | 'FINANCEIRO'>('TODOS')
+  const [categoryFilter, setCategoryFilter] = useState<'TODAS' | 'FINANCEIRO' | 'OPERACIONAL' | 'VENDAS'>('TODAS')
+
+  // Dados remotos filtrados por API
+  const [remoteIndicators, setRemoteIndicators] = useState<any[] | null>(null)
+  const [remoteGoals, setRemoteGoals] = useState<any[] | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+
+  // Buscar dados quando filtros mudarem
+  useEffect(() => {
+    const fetchFiltered = async () => {
+      try {
+        setIsLoading(true)
+        const params = new URLSearchParams()
+        if (departmentFilter && departmentFilter !== 'TODOS') params.append('department', departmentFilter)
+        if (categoryFilter && categoryFilter !== 'TODAS') params.append('category', categoryFilter)
+        const res = await fetch(`/api/indicators/filtered?${params.toString()}`)
+        const data = await res.json()
+        setRemoteIndicators(data?.indicators ?? [])
+        setRemoteGoals(data?.goals ?? [])
+      } catch (e) {
+        console.error('Erro ao buscar indicadores filtrados (dashboard):', e)
+        setRemoteIndicators(null)
+        setRemoteGoals(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchFiltered()
+  }, [departmentFilter, categoryFilter])
+
+  // Fonte de dados: remota (quando disponível) ou props
+  const indicatorsSource = remoteIndicators ?? indicators
+  const goalsSource = remoteGoals ?? goals
+
   // Filtrar indicadores por departamento
-  const comercialData = indicators.filter(ind => ind.department === 'COMERCIAL' || ind.user?.department === 'COMERCIAL')
-  const logisticaData = indicators.filter(ind => ind.department === 'LOGISTICA' || ind.user?.department === 'LOGISTICA')
-  const comprasData = indicators.filter(ind => ind.department === 'COMPRAS' || ind.user?.department === 'COMPRAS')
-  const financeiroData = indicators.filter(ind => ind.department === 'FINANCEIRO' || ind.user?.department === 'FINANCEIRO')
+  const comercialData = indicatorsSource.filter(ind => ind.department === 'COMERCIAL' || ind.user?.department === 'COMERCIAL')
+  const logisticaData = indicatorsSource.filter(ind => ind.department === 'LOGISTICA' || ind.user?.department === 'LOGISTICA')
+  const comprasData = indicatorsSource.filter(ind => ind.department === 'COMPRAS' || ind.user?.department === 'COMPRAS')
+  const financeiroData = indicatorsSource.filter(ind => ind.department === 'FINANCEIRO' || ind.user?.department === 'FINANCEIRO')
 
   // Obter dados mais recentes de cada setor
   const latestComercial = comercialData[0]?.data || {}
@@ -291,28 +327,11 @@ export function CorporateDashboard({ indicators = [], goals = [] }: CorporateDas
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">
-            Dashboard Corporativo
-          </h1>
-          <p className="text-slate-600 text-lg">
-            Visão executiva dos principais indicadores de performance
-          </p>
-          <div className="mt-4 flex items-center gap-4">
-            <Badge variant="outline" className="text-sm">
-              Atualizado em tempo real
-            </Badge>
-            <Badge variant="outline" className="text-sm">
-              {new Date().toLocaleDateString('pt-BR')}
-            </Badge>
-          </div>
-        </div>
-
+    <div className="container mx-auto p-4">
+      <div className="space-y-6">
         {/* Destaques com IndicatorCard (validação visual) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {(departmentFilter === 'TODOS' || departmentFilter === 'COMERCIAL') && (
           <IndicatorCard
             indicator={{
               name: 'Faturamento Mês',
@@ -331,8 +350,9 @@ export function CorporateDashboard({ indicators = [], goals = [] }: CorporateDas
             }}
             onEdit={() => {}}
             onDelete={() => {}}
-          />
+          />)}
 
+          {(departmentFilter === 'TODOS' || departmentFilter === 'LOGISTICA') && (
           <IndicatorCard
             indicator={{
               name: 'OTIF',
@@ -351,37 +371,45 @@ export function CorporateDashboard({ indicators = [], goals = [] }: CorporateDas
             }}
             onEdit={() => {}}
             onDelete={() => {}}
-          />
+          />)}
         </div>
 
         {/* Grid de Cards - Layout Paisagem */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Card Comercial */}
-          {renderMetricCard(
-            'Comercial', 
-            comercialMetrics, 
-            'bg-gradient-to-br from-blue-600 to-blue-700'
+          {(departmentFilter === 'TODOS' || departmentFilter === 'COMERCIAL') && (
+            renderMetricCard(
+              'Comercial', 
+              comercialMetrics, 
+              'bg-gradient-to-br from-blue-600 to-blue-700'
+            )
           )}
 
           {/* Card Logística */}
-          {renderMetricCard(
-            'Logística', 
-            logisticaMetrics, 
-            'bg-gradient-to-br from-green-600 to-green-700'
+          {(departmentFilter === 'TODOS' || departmentFilter === 'LOGISTICA') && (
+            renderMetricCard(
+              'Logística', 
+              logisticaMetrics, 
+              'bg-gradient-to-br from-green-600 to-green-700'
+            )
           )}
 
           {/* Card Compras */}
-          {renderMetricCard(
-            'Compras', 
-            comprasMetrics, 
-            'bg-gradient-to-br from-purple-600 to-purple-700'
+          {(departmentFilter === 'TODOS' || departmentFilter === 'COMPRAS') && (
+            renderMetricCard(
+              'Compras', 
+              comprasMetrics, 
+              'bg-gradient-to-br from-purple-600 to-purple-700'
+            )
           )}
 
           {/* Card Financeiro */}
-          {renderMetricCard(
-            'Financeiro', 
-            financeiroMetrics, 
-            'bg-gradient-to-br from-orange-600 to-orange-700'
+          {(departmentFilter === 'TODOS' || departmentFilter === 'FINANCEIRO') && (
+            renderMetricCard(
+              'Financeiro', 
+              financeiroMetrics, 
+              'bg-gradient-to-br from-orange-600 to-orange-700'
+            )
           )}
         </div>
 

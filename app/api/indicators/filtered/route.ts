@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const department = searchParams.get('department')
+    const category = searchParams.get('category')
 
     // Construir filtros
     const whereClause: any = {}
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar indicadores
-    const indicators = await prisma.indicator.findMany({
+    let indicators = await prisma.indicator.findMany({
       where: whereClause,
       include: {
         user: {
@@ -47,13 +48,30 @@ export async function GET(request: NextRequest) {
     if (department && department !== 'ALL') {
       goalsWhereClause.department = department as any
     }
-    
-    const goals = await prisma.goal.findMany({
+    let goals = await prisma.goal.findMany({
       where: goalsWhereClause,
       orderBy: {
         createdAt: 'desc'
       }
     })
+
+    // Filtro por categoria (in-memory via palavras-chave)
+    const normalizedCategory = category && category !== 'TODAS' ? category.toUpperCase() : null
+    if (normalizedCategory) {
+      const categoryKeywords: Record<string, string[]> = {
+        VENDAS: ['Faturamento', 'Positivação', 'Venda', 'Ticket'],
+        OPERACIONAL: ['OTIF', 'Devolução', 'Custo Logístico', 'Custo', 'Ruptura', 'Cobertura', 'Curva', 'Entrega', 'Operacional'],
+        FINANCEIRO: ['Inadimplência', 'Limites', 'Financeiro', 'Margem', 'Custo Financeiro']
+      }
+
+      const matchesCategory = (name: string, cat: string) => {
+        const list = categoryKeywords[cat] || []
+        return list.some(keyword => name.toLowerCase().includes(keyword.toLowerCase()))
+      }
+
+      indicators = indicators.filter(i => matchesCategory(i.name, normalizedCategory))
+      goals = goals.filter(g => matchesCategory(g.name, normalizedCategory))
+    }
 
     // Agrupar indicadores por departamento e nome para análise
     const groupedIndicators = indicators.reduce((acc, indicator) => {

@@ -57,6 +57,8 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
   const [isFilterVisible, setIsFilterVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState<{startDate: string, endDate: string} | null>(null)
+  const [department, setDepartment] = useState<string>('TODOS')
+  const [category, setCategory] = useState<string>('TODAS')
 
   // Função para formatar valores
   const formatValue = (value: number | string, unit?: string): string => {
@@ -145,22 +147,19 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
   }
 
   // Função para buscar dados filtrados
-  const fetchFilteredData = async (startDate?: string, endDate?: string, department?: string) => {
-    setIsLoading(true)
+  const fetchFilteredData = async (startDate?: string, endDate?: string, departmentParam?: string, categoryParam?: string) => {
     try {
+      setIsLoading(true)
       const params = new URLSearchParams()
       if (startDate) params.append('startDate', startDate)
       if (endDate) params.append('endDate', endDate)
-      if (department) params.append('department', department)
-      
-      const response = await fetch(`/api/indicators/filtered?${params.toString()}`)
-      if (response.ok) {
-        const data = await response.json()
-        setFilteredData(data)
-        setSelectedPeriod(data.summary.period)
-      } else {
-        console.error('Erro ao buscar dados filtrados')
-      }
+      const dept = (departmentParam ?? department)
+      if (dept && dept !== 'TODOS') params.append('department', dept)
+      const cat = (categoryParam ?? category)
+      if (cat && cat !== 'TODAS') params.append('category', cat)
+      const res = await fetch(`/api/indicators/filtered?${params.toString()}`)
+      const data = await res.json()
+      setFilteredData(data)
     } catch (error) {
       console.error('Erro ao buscar dados filtrados:', error)
     } finally {
@@ -185,7 +184,7 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
   // Handlers para filtros
   const handleDateRangeChange = (startDate: string, endDate: string) => {
     setActiveFilter({ startDate, endDate })
-    fetchFilteredData(startDate, endDate)
+    fetchFilteredData(startDate, endDate, department, category)
     setIsFilterVisible(false)
   }
 
@@ -196,12 +195,11 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
     setIsFilterVisible(false)
   }
 
-  const handleRefreshData = () => {
+  const handleRefreshData = async () => {
     if (activeFilter) {
-      fetchFilteredData(activeFilter.startDate, activeFilter.endDate)
+      await fetchFilteredData(activeFilter.startDate, activeFilter.endDate, department, category)
     } else {
-      // Recarregar dados originais
-      window.location.reload()
+      await fetchFilteredData(undefined, undefined, department, category)
     }
   }
 
@@ -447,17 +445,41 @@ export function ReportsView({ indicators = [], goals = [], dateRange = "7 de jul
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <Badge variant="outline" className="text-sm">
+                Atualizado em tempo real
+              </Badge>
+              <Badge variant="outline" className="text-sm">
+                {new Date().toLocaleDateString('pt-BR')}
+              </Badge>
+              {/* Filtros rápidos */}
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span className="text-sm">{selectedPeriod}</span>
-                {activeFilter && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    Filtrado
-                  </Badge>
-                )}
+                <label className="text-sm text-gray-600">Departamento</label>
+                <select
+                  className="text-sm border rounded px-2 py-1 bg-white"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                >
+                  <option value="TODOS">Todos</option>
+                  <option value="COMERCIAL">Comercial</option>
+                  <option value="LOGISTICA">Logística</option>
+                  <option value="COMPRAS">Compras</option>
+                  <option value="FINANCEIRO">Financeiro</option>
+                </select>
               </div>
-              
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">Categoria</label>
+                <select
+                  className="text-sm border rounded px-2 py-1 bg-white"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  <option value="TODAS">Todas</option>
+                  <option value="FINANCEIRO">Financeiro</option>
+                  <option value="OPERACIONAL">Operacional</option>
+                  <option value="VENDAS">Vendas</option>
+                </select>
+              </div>
               <DateRangeFilter
                 onDateRangeChange={handleDateRangeChange}
                 onClear={handleClearFilter}
