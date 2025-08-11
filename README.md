@@ -235,4 +235,4 @@ Para suporte, entre em contato através do email ou WhatsApp configurado no sist
 
 ---
 
-Desenvolvido com ❤️ para a Esplendor
+Desenvolvido para a Esplendor
