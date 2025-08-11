@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { ReportsView } from '@/components/ReportsView'
 import { prisma } from '@/lib/prisma'
 
